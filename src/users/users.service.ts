@@ -14,6 +14,9 @@ export class UsersService {
     @InjectModel(Client.name) private readonly clientModel: Model<ClientDocument>
   ) { }
 
+
+  
+
   async create(createUserDto: CreateUserDto) {
     const client = await this.clientModel.findById(createUserDto.clientId)
     if (!client) {

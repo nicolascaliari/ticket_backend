@@ -14,6 +14,8 @@ async function main() {
    );
 
 
+  app.setGlobalPrefix('api');
+  
   await app.listen(envs.port);
 }
 main();
