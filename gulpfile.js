@@ -9,6 +9,11 @@ gulp.task('git:push', async function (cb) {
    cb();
 });
 
+gulp.task('git:add', async function (cb) {
+   run('git add .');
+   cb();
+});
+
 gulp.task('npm:patch', async function (cb) {
    run(`npm version patch -f -m "%s: ${process.env.MESSAGE}"`);
    cb();
@@ -24,6 +29,6 @@ gulp.task('npm:major', async function (cb) {
    cb();
 });
 
-gulp.task('patch', gulp.series('npm:patch', 'git:push'));
-gulp.task('minor', gulp.series('npm:minor', 'git:push'));
-gulp.task('major', gulp.series('npm:major', 'git:push'));
+gulp.task('patch', gulp.series('git:add', 'npm:patch', 'git:push'));
+gulp.task('minor', gulp.series('git:add', 'npm:minor', 'git:push'));
+gulp.task('major', gulp.series('git:add', 'npm:major', 'git:push'));
