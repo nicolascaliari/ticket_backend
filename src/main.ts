@@ -8,7 +8,8 @@ async function main() {
 
   app.enableCors({
     origin: [
-      'https://tickets-ncaliari.vercel.app'
+      'https://tickets-ncaliari.vercel.app',
+      'http://localhost:5173'
     ],
     credentials: true,
   });

@@ -88,6 +88,9 @@ export class Ticket {
 
   @Prop({ type: [TicketAttachmentSchema], default: [] })
   attachments!: TicketAttachment[];
+
+  @Prop({ type: Date, default: null })
+  deletedAt?: Date | null;
 }
 
 export const TicketSchema = SchemaFactory.createForClass(Ticket);

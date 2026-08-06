@@ -93,8 +93,8 @@ export class TicketsController {
   }
 
   @Delete(':id')
-  @Auth(Roles.Admin)
-  remove(@Param('id') id: string) {
-    return this.ticketsService.remove(+id);
+  @Auth(Roles.Client)
+  remove(@Param('id') id: string, @Req() req: RequestWithUser) {
+    return this.ticketsService.softDelete(id, req.user);
   }
 }
