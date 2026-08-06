@@ -155,8 +155,16 @@ export class TicketsService {
     return this.serializeTicket(ticket);
   }
 
+  private assertNotDeleted(ticket: TicketDocument) {
+    if (ticket.deletedAt) {
+      throw new NotFoundException('Ticket not found');
+    }
+  }
+
   async findAll(filters: FilterTicketsDto = {}, user?: AuthUserPayload) {
-    const query: Record<string, unknown> = {};
+    const query: Record<string, unknown> = {
+      deletedAt: null,
+    };
     let clientId = filters.clientId;
 
     if (user && !this.isStaff(user)) {
@@ -184,7 +192,19 @@ export class TicketsService {
       };
     }
 
-    if (clientId) {
+    if (filters.projectId) {
+      if (user) {
+        await this.assertProjectAccess(filters.projectId, user);
+      }
+      const project = await this.projectModel.findById(filters.projectId);
+      if (!project) {
+        return [];
+      }
+      if (clientId && project.clientId.toString() !== clientId) {
+        return [];
+      }
+      query.projectId = new Types.ObjectId(filters.projectId);
+    } else if (clientId) {
       const projectIds = await this.getProjectIdsForClient(clientId);
       if (projectIds.length === 0) {
         return [];
@@ -217,6 +237,7 @@ export class TicketsService {
   async findOne(id: string, user: AuthUserPayload) {
     const ticket = await this.ticketModel.findById(id);
     if (!ticket) throw new NotFoundException('Ticket not found');
+    this.assertNotDeleted(ticket);
     await this.assertTicketAccess(ticket, user);
     return this.serializeTicket(ticket);
   }
@@ -224,6 +245,7 @@ export class TicketsService {
   async update(id: string, updateTicketDto: UpdateTicketDto, user: AuthUserPayload) {
     const ticket = await this.ticketModel.findById(id);
     if (!ticket) throw new NotFoundException('Ticket not found');
+    this.assertNotDeleted(ticket);
     await this.assertTicketAccess(ticket, user);
 
     if (updateTicketDto.projectId !== undefined) {
@@ -277,6 +299,7 @@ export class TicketsService {
   ) {
     const ticket = await this.ticketModel.findById(id);
     if (!ticket) throw new NotFoundException('Ticket not found');
+    this.assertNotDeleted(ticket);
     await this.assertTicketAccess(ticket, user);
 
     const uploaded = await this.storageService.uploadImage(file, 'tickets');
@@ -301,6 +324,7 @@ export class TicketsService {
   ) {
     const ticket = await this.ticketModel.findById(id);
     if (!ticket) throw new NotFoundException('Ticket not found');
+    this.assertNotDeleted(ticket);
     await this.assertTicketAccess(ticket, user);
 
     const attachment = ticket.attachments.find(
@@ -320,7 +344,15 @@ export class TicketsService {
     return this.serializeTicket(ticket);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} ticket`;
+  async softDelete(id: string, user: AuthUserPayload) {
+    const ticket = await this.ticketModel.findById(id);
+    if (!ticket) throw new NotFoundException('Ticket not found');
+    this.assertNotDeleted(ticket);
+    await this.assertTicketAccess(ticket, user);
+
+    ticket.deletedAt = new Date();
+    await ticket.save();
+
+    return { ok: true, _id: ticket._id.toString() };
   }
 }

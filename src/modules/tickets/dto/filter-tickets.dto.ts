@@ -14,6 +14,10 @@ export class FilterTicketsDto {
   clientId?: string;
 
   @IsOptional()
+  @IsMongoId()
+  projectId?: string;
+
+  @IsOptional()
   @IsEnum(TicketStatus)
   status?: TicketStatus;
 
