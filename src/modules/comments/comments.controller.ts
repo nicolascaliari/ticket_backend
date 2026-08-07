@@ -1,34 +1,34 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { CommentsService } from './comments.service';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
+import type { Request } from 'express';
+import { CommentsService, AuthUserPayload } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { UpdateCommentDto } from './dto/update-comment.dto';
+import { Auth } from '../auth/decorators/auth.decorator';
+import { Roles } from '../../common/enums/roles.enum';
 
-@Controller('comments')
+interface RequestWithUser extends Request {
+  user: AuthUserPayload;
+}
+
+@Controller('tickets/:ticketId/comments')
 export class CommentsController {
   constructor(private readonly commentsService: CommentsService) {}
 
-  @Post()
-  create(@Body() createCommentDto: CreateCommentDto) {
-    return this.commentsService.create(createCommentDto);
-  }
-
   @Get()
-  findAll() {
-    return this.commentsService.findAll();
+  @Auth(Roles.Client)
+  findByTicket(
+    @Param('ticketId') ticketId: string,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.commentsService.findByTicket(ticketId, req.user);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.commentsService.findOne(id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCommentDto: UpdateCommentDto) {
-    return this.commentsService.update(+id, updateCommentDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.commentsService.remove(+id);
+  @Post()
+  @Auth(Roles.Client)
+  create(
+    @Param('ticketId') ticketId: string,
+    @Body() createCommentDto: CreateCommentDto,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.commentsService.create(ticketId, createCommentDto, req.user);
   }
 }
