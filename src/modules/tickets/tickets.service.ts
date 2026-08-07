@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   InternalServerErrorException,
@@ -296,6 +297,7 @@ export class TicketsService {
     id: string,
     file: Express.Multer.File,
     user: AuthUserPayload,
+    originalName?: string,
   ) {
     const ticket = await this.ticketModel.findById(id);
     if (!ticket) throw new NotFoundException('Ticket not found');
@@ -303,17 +305,48 @@ export class TicketsService {
     await this.assertTicketAccess(ticket, user);
 
     const uploaded = await this.storageService.uploadImage(file, 'tickets');
+    const displayName = originalName?.trim() || uploaded.originalName;
 
     ticket.attachments.push({
       url: uploaded.url,
       publicId: uploaded.publicId,
-      originalName: uploaded.originalName,
+      originalName: displayName,
       mimeType: uploaded.mimeType,
       size: uploaded.size,
       uploadedBy: new Types.ObjectId(user.sub),
     });
 
     await ticket.save();
+    return this.serializeTicket(ticket);
+  }
+
+  async updateAttachment(
+    id: string,
+    attachmentId: string,
+    originalName: string,
+    user: AuthUserPayload,
+  ) {
+    const ticket = await this.ticketModel.findById(id);
+    if (!ticket) throw new NotFoundException('Ticket not found');
+    this.assertNotDeleted(ticket);
+    await this.assertTicketAccess(ticket, user);
+
+    const attachment = ticket.attachments.find(
+      (item) => item._id?.toString() === attachmentId,
+    );
+
+    if (!attachment) {
+      throw new NotFoundException('Attachment not found');
+    }
+
+    const trimmed = originalName.trim();
+    if (!trimmed) {
+      throw new BadRequestException('El nombre de la imagen es requerido');
+    }
+
+    attachment.originalName = trimmed;
+    await ticket.save();
+
     return this.serializeTicket(ticket);
   }
 
