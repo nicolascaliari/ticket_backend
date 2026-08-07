@@ -18,6 +18,7 @@ import type { Request } from 'express';
 import { TicketsService, AuthUserPayload } from './tickets.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
+import { UpdateAttachmentDto } from './dto/update-attachment.dto';
 import { FilterTicketsDto } from './dto/filter-tickets.dto';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { Roles } from '../../common/enums/roles.enum';
@@ -72,6 +73,7 @@ export class TicketsController {
   addAttachment(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
+    @Body('originalName') originalName: string | undefined,
     @Req() req: RequestWithUser,
   ) {
     if (!file) {
@@ -79,7 +81,28 @@ export class TicketsController {
         'Campo "file" requerido (multipart/form-data)',
       );
     }
-    return this.ticketsService.addAttachment(id, file, req.user);
+    return this.ticketsService.addAttachment(
+      id,
+      file,
+      req.user,
+      originalName,
+    );
+  }
+
+  @Patch(':id/attachments/:attachmentId')
+  @Auth(Roles.Client)
+  updateAttachment(
+    @Param('id') id: string,
+    @Param('attachmentId') attachmentId: string,
+    @Body() updateAttachmentDto: UpdateAttachmentDto,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.ticketsService.updateAttachment(
+      id,
+      attachmentId,
+      updateAttachmentDto.originalName,
+      req.user,
+    );
   }
 
   @Delete(':id/attachments/:attachmentId')
