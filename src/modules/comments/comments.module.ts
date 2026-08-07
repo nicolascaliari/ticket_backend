@@ -5,6 +5,7 @@ import { CommentsController } from './comments.controller';
 import { Comment, CommentSchema } from './entities/comment.entity';
 import { User, UserSchema } from '../users/entities/user.entity';
 import { Ticket, TicketSchema } from '../tickets/entities/ticket.entity';
+import { Project, ProjectSchema } from '../projects/entities/project.entity';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { Ticket, TicketSchema } from '../tickets/entities/ticket.entity';
       { name: Comment.name, schema: CommentSchema },
       { name: User.name, schema: UserSchema },
       { name: Ticket.name, schema: TicketSchema },
+      { name: Project.name, schema: ProjectSchema },
     ]),
   ],
   controllers: [CommentsController],

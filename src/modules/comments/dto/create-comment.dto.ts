@@ -1,16 +1,9 @@
-import { IsMongoId, IsNotEmpty, IsString } from 'class-validator';
-import { Types } from 'mongoose';
+import { IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateCommentDto {
-  @IsMongoId()
-  @IsNotEmpty()
-  userId!: Types.ObjectId;
-
-  @IsMongoId()
-  @IsNotEmpty()
-  ticketId!: Types.ObjectId;
-
   @IsString()
   @IsNotEmpty()
+  @MinLength(1)
+  @MaxLength(5000)
   content!: string;
 }
